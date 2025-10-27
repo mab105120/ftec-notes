@@ -186,7 +186,7 @@ finally:
 
 Models extend ```Base``` from the ```db``` module and declare columns/relationships. Keep models in their own package (for example, ```models/```), and ensure an __init__.py imports them so mappers register once.
 
-> Imports with SQL alchemy can become tricky and cause errors that are hard to troubleshoot. In order to carefully understand how python import system interacts with alchemy's see notes here. It is always recommended to follow best practice in order to avoid tricky errors.
+> Imports with SQL alchemy can become tricky and cause errors that are hard to troubleshoot. In order to carefully understand how python import system interacts with alchemy's see notes [here](https://github.com/mab105120/ftec-notes/blob/main/managing-imports-sqlalchemy.md). It is always recommended to follow best practice in order to avoid tricky errors.
 
 File structure:
 

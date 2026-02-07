@@ -75,7 +75,7 @@ def register():
     return jsonify({'message': 'investment liquidated'}), 201
 ```
 
-**Problem**: If `create_profile()` raises an exception, the user has already been committed to the database, resulting in incomplete data.
+**Problem**: If `update_balance()` raises an exception, the investment is already liquidated in the database, resulting in incomplete data.
 
 ### Correct Pattern: Commit Only at Route Level
 
@@ -105,7 +105,7 @@ def register():
     return jsonify({'message': 'investment liquidated'}), 201
 ```
 
-**Benefit**: Both operations are part of the same transaction. If `create_profile()` fails, the rollback includes the user creation, maintaining atomicity.
+**Benefit**: Both operations are part of the same transaction. If `update_balance` fails, the rollback includes the user creation, maintaining atomicity.
 
 ## Error Handling and Rollbacks
 

@@ -172,7 +172,14 @@ aws cognito-idp create-user-pool \
       RequireNumbers=true,
       RequireSymbols=false}' \
   --auto-verified-attributes email \
-  --username-attributes email \
+  --schema '[
+    {
+      "Name": "email",
+      "AttributeDataType": "String",
+      "Required": true,
+      "Mutable": true
+    }
+  ]' \
   --region us-east-1
 ```
 
@@ -197,6 +204,16 @@ aws cognito-idp create-user-pool-client \
 
 > **Note on `--no-generate-secret`:** Because this client is used by a SPA, we do not generate a client secret. SPAs cannot store secrets securely. PKCE compensates for the absent secret.
 
+### Step 3: Create a Domain
+
+```bash
+aws cognito-idp create-user-pool-domain \
+  --domain your-domain-prefix \
+  --user-pool-id us-east-1_xxxxxxxxx \
+  --region us-east-1
+```
+
+
 #### JWKS Endpoint (Public Key Discovery)
 
 Your application needs Cognito's public keys to verify token signatures. Cognito publishes these at a standard URL:
@@ -206,6 +223,67 @@ https://cognito-idp.<region>.amazonaws.com/<user-pool-id>/.well-known/jwks.json
 `
 
 ---
+
+### How to manually get an access token for testing
+Now that the user pool and the app client are setup we can use them to generate an access token.
+Before starting the process we must first generate a code challenge and a corresponding verifier because we'll need them in the authentication process. This will eventually be handled by the browser but for now we'll have to do it manually. To generate a code challenge and verifier, run the following python script:
+```python
+# generate_pkce.py
+import base64
+import hashlib
+import secrets
+
+# Generate code_verifier (random string)
+code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8').rstrip('=')
+
+# Generate code_challenge (SHA256 hash of verifier)
+code_challenge = (
+    base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode('utf-8')).digest()).decode('utf-8').rstrip('=')
+)
+
+print('PKCE Parameters:')
+print('=' * 50)
+print(f'code_verifier: {code_verifier}')
+print(f'code_challenge: {code_challenge}')
+print('=' * 50)
+print("\nSave the code_verifier - you'll need it when exchanging the code!")
+```
+This script will print to the console a code challenge and a code verifier. Note the two codes down.
+
+Next a user must sign up so that they are added to the user pool. Use the following URL to get to the sign in/up page:
+
+https://{domain}.auth.{region}.amazoncognito.com/oauth2/authorize?response_type=code&client_id={client_id}&redirect_uri={redirect_uri}&scope=openid+email+profile&code_challenge={code_challenge}&code_challenge_method=S256
+
+You will need the following parameters substituted in the URL above:
+- Domain
+- Region
+- Client ID
+- Redirect URL
+- Code challenge
+
+Go to the URL from your browser. That should bring up AWS Cognito's default sign in/up page. Select the option tpo sign up, fill out the form, then hit submit:
+
+<img width="359" height="371" alt="image" src="https://github.com/user-attachments/assets/1cfa3dda-1cca-46af-8dd8-86efc9c8f50d" />
+
+The email that you provide on this form must be valid because AWS expects to verify it. You will not be able to get a token before you verify the email address. You will receive an email from AWS to help with the verification process.
+
+Now that a user is added to the pool and their email is verified we can request an access token for this user from AWS Cognito.
+
+This is a two step process:
+
+**Step 1:** The user logs in using the same login URL above with their username and password. Once Cognito verifies that they match it will redirect the browser to the Callback URL that was configured when the client app was created. In the URL of the directed page you will see appended as a query parameter a code. Take note of this code.
+
+<img width="724" height="401" alt="image" src="https://github.com/user-attachments/assets/a5d0b66f-cdf1-42cd-b8d6-2427e9c7d010" />
+
+**Step 2:** Now that you have the authentication code, you can exchange it for an access token by making a POST request to AWS Cognito:
+
+You can use Postman (or any other tool that allows to make POST HTTP requests):
+<img width="871" height="517" alt="image" src="https://github.com/user-attachments/assets/a23f79a3-bba8-444b-a82e-49f14376856d" />
+
+This call when successful will return the access token.
+
+<img width="1099" height="774" alt="image" src="https://github.com/user-attachments/assets/60a20cac-855a-4d6f-bb80-ce3034b31c57" />
+
 
 ## 5. Building the Auth Module
 

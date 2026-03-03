@@ -205,7 +205,7 @@ aws cognito-idp create-user-pool-client \
   --client-name MyAppSPAClient \
   --no-generate-secret \
   --allowed-o-auth-flows code \
-  --allowed-o-auth-scopes openid email profile \
+  --allowed-o-auth-scopes openid email profile aws.cognito.signin.user.admin\
   --allowed-o-auth-flows-user-pool-client \
   --supported-identity-providers COGNITO \
   --callback-urls "https://myapp.com/callback" \

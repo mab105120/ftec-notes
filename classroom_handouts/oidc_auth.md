@@ -165,7 +165,7 @@ After a successful authentication, Cognito issues three JWT tokens: an ID Token 
 ```bash
 aws cognito-idp create-user-pool \
   --pool-name MyAppUserPool \
-  --policies PasswordPolicy='{
+  --policies 'PasswordPolicy={
       MinimumLength=8,
       RequireUppercase=true,
       RequireLowercase=true,
@@ -175,6 +175,18 @@ aws cognito-idp create-user-pool \
   --schema '[
     {
       "Name": "email",
+      "AttributeDataType": "String",
+      "Required": true,
+      "Mutable": true
+    },
+    {
+      "Name": "given_name",
+      "AttributeDataType": "String",
+      "Required": true,
+      "Mutable": true
+    },
+    {
+      "Name": "family_name",
       "AttributeDataType": "String",
       "Required": true,
       "Mutable": true
